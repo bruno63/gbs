@@ -13,29 +13,13 @@ import com.bkaiser.gbs.GbsLogUtil;
  * @author Bruno Kaiser
  */
 public class GbsConfig {
-	public static final String[] SEPARATORS = { "msdos", "unix", "mac" };
-	public static final String[] STYLES = { "compact", "raw", "pretty" };
-	public static final String[] DOCTYPES = { "strict", "transitional", "frameset", "lat1", "symbol", "special"};
 	private static final String CN = "GbsConfig";
 	
-	private static boolean testMode = false;  
 	private static boolean debugMode = false;
-	private static String srcDirName = ".";
-	private static String destDirName = ".";
-	private static String siteName = "mySite";
-	private static String siteTemplateName = "siteTemplate.xml";
-	private static String siteSkeletonName = "siteSkeleton.html";
-	private static String pageTemplateName = "pageTemplate.html";
 	private File srcDir = null;
 	private File destDir = null;
 	private File templateF = null;
 	private File skeletonF = null;
-	private File pageTemplateF = null;
-	private String encoding = "UTF-8";
-	private String style = "pretty";
-	private int indentation = 4;
-	private String indentationStr = "    ";
-	private String lineSeparator = "unix";
 
 	/**
 	 * Initializes the configuration. It uses the defaults defined in this class
@@ -48,57 +32,19 @@ public class GbsConfig {
 		Properties _props = new Properties();
 		_props.load(new FileInputStream("gbs.properties"));
 		
-		// set all config attributes
-		destDirName = safeReadStringProperty(_props, "destDirName", destDirName);
-		srcDirName = safeReadStringProperty(_props, "srcDirName", srcDirName);
-		testMode = safeReadBooleanProperty(_props, "testMode", testMode);
+		// read all config attributes
 		debugMode = safeReadBooleanProperty(_props, "debugMode", debugMode);
-		siteName = safeReadStringProperty(_props, "siteName", siteName);
-		siteTemplateName = safeReadStringProperty(_props, "siteTemplateName", siteTemplateName);
-		siteSkeletonName = safeReadStringProperty(_props, "siteSkeletonName", siteSkeletonName);
-		pageTemplateName = safeReadStringProperty(_props, "pageTemplateName", pageTemplateName);
-		srcDir = new File(srcDirName).getCanonicalFile();
-		destDir = new File(destDirName).getCanonicalFile();
-		templateF = new File(srcDir, siteTemplateName).getCanonicalFile();
-		skeletonF = new File(srcDir, siteSkeletonName).getCanonicalFile();
-		pageTemplateF = new File(destDir, pageTemplateName).getCanonicalFile();
-		encoding = safeReadStringProperty(_props, "encoding", encoding);
-		style = getEnum(_props, "style", style, STYLES);
-		indentation = getInt(_props, "indentation", indentation);
-		switch (indentation) {
-			case 2: indentationStr = "  "; break;
-			case 8: indentationStr = "        "; break;
-			default: indentationStr = "    "; break;   // 4
-		}
-		lineSeparator = getEnum(_props, "lineSeparator", lineSeparator, SEPARATORS);
+		srcDir = new File(safeReadStringProperty(_props, "srcDirName", ".")).getCanonicalFile();
+		destDir = new File(safeReadStringProperty(_props, "destDirName", ".")).getCanonicalFile();
+		templateF = new File(safeReadStringProperty(_props, "siteTemplateName", "./siteTemplate.xml")).getCanonicalFile();
+		skeletonF = new File(safeReadStringProperty(_props, "siteSkeletonName", "./siteSkeleton.html")).getCanonicalFile();
 	}
 			
-	/**
-	 * @return the testMode
-	 */
-	public boolean isTestMode() {
-		return testMode;
-	}
-
 	/**
 	 * @return the debugMode
 	 */
 	public boolean isDebugMode() {
 		return debugMode;
-	}
-
-	/**
-	 * @return the destDirName
-	 */
-	public String getDestDirName() {
-		return destDirName;
-	}
-
-	/**
-	 * @return the siteName
-	 */
-	public String getSiteName() {
-		return siteName;
 	}
 
 	/**
@@ -127,29 +73,15 @@ public class GbsConfig {
 	public File getSiteSkeletonFile() {
 		return skeletonF;
 	}
-	
-	public File getPageTemplateFile() {
-		return pageTemplateF;
-	}
-	
+		
 	/** 
 	 * Dumps the config onto stdout.
 	 */
 	public void dumpConfig() {
-		System.out.println("srcDirName=" + srcDirName);
-		System.out.println("destDirName=" + destDirName);
 		System.out.println("debugMode=" + debugMode);
-		System.out.println("testMode=" + debugMode);
-		System.out.println("siteName=" + siteName);
-		System.out.println("siteTemplateName=" + siteTemplateName);
-		System.out.println("siteSkeletonName=" + siteSkeletonName);
-		System.out.println("siteTemplateFile=" + templateF.getAbsolutePath());
-		System.out.println("siteSkeletonName=" + skeletonF.getAbsolutePath());
-		System.out.println("pageTemplateFile=" + pageTemplateF.getAbsolutePath());
-		System.out.println("encoding=" + encoding);
-		System.out.println("style=" + style);
-		System.out.println("indentation=" + indentation);
-		System.out.println("lineSeparator=" + lineSeparator);
+		System.out.println("sourceDir=" + getSourceDir().getAbsolutePath());
+		System.out.println("siteTemplateFile=" + getSiteTemplateFile().getAbsolutePath());
+		System.out.println("siteSkeletonName=" + getSiteSkeletonFile().getAbsolutePath());
 	}
 
 	/**
@@ -217,51 +149,5 @@ public class GbsConfig {
 	public int getInt(Properties config, String key, int defaultValue)
 	{
 		return new Integer(safeReadStringProperty(config, key, new Integer(defaultValue).toString())).intValue();
-	}
-
-	/**
-	 * @return the encoding
-	 */
-	public String getEncoding() {
-		return encoding;
-	}
-
-	/**
-	 * @return the style
-	 */
-	public String getStyle() {
-		return style;
-	}
-
-	/**
-	 * @return the indentationStr
-	 */
-	public String getIndentationStr() {
-		return indentationStr;
-	}
-
-	/**
-	 * @return the lineSeparator
-	 */
-	public String getLineSeparator() {
-		return encodeLineSeparator(lineSeparator);
-	}
-	
-	/**
-	 * Set line separator (mac, unix, dos).
-	 * 
-	 * @param sep the line separator descriptor, i.e. mac | unix | dos
-	 * @return the encoded line separator, i.e. \r\n | \r | \n
-	 */
-	private String encodeLineSeparator(String sep)
-	{
-		String _retSep = "\n";
-		if (sep.equalsIgnoreCase("msdos")) {
-			_retSep = "\r\n";
-		}
-		else if (sep.equalsIgnoreCase("mac")) {
-			_retSep = "\r";
-		}
-		return _retSep;
 	}
 }

@@ -49,10 +49,11 @@ public class GbsXmlExport
 			GbsLogUtil.info(CN, "write", "writing file " + destF.getAbsolutePath());
 		}
 		try {
-			// format leads to problems because of removing empty content, e.g. <script ..></script> -> <script .. />
 			Format _fmt = Format.getPrettyFormat();
-			//_fmt.setIndent(cfg.getIndentationStr());
-			//_fmt.setEncoding(cfg.getEncoding());
+			_fmt.setEncoding("iso-8859-1");
+			_fmt.setIndent("  ");
+			//_fmt.setEscapeStrategy(new EscapeStrategy());
+			_fmt.setExpandEmptyElements(true);
 			//_fmt.setLineSeparator(cfg.getLineSeparator());
 			//_fmt.setOmitDeclaration(true); // omit the output of the XML declaration  (<?xml version="1.0"?>)
 
