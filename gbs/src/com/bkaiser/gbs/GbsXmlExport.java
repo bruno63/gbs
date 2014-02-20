@@ -24,16 +24,14 @@ import org.jdom2.output.*;
 public class GbsXmlExport
 {
 	private static final String CN = "GbsXmlExport";
-	private GbsConfig cfg = null;
 	
 	/**
 	 * Constructor
 	 *
 	 * @param config the configuration 
 	 */
-	public GbsXmlExport(GbsConfig config)
+	public GbsXmlExport()
 	{
-		cfg = config;
 	}
 		
 	/**
@@ -45,9 +43,6 @@ public class GbsXmlExport
 	public void write(Element rootElem, File destF) {
 		GbsLogUtil.checkNull(rootElem, "rootElem");
 		GbsLogUtil.checkNull(destF, "destF");
-		if (cfg.isDebugMode()) {
-			GbsLogUtil.info(CN, "write", "writing file " + destF.getAbsolutePath());
-		}
 		try {
 			Format _fmt = Format.getPrettyFormat();
 			_fmt.setEncoding("iso-8859-1");

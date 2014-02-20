@@ -19,7 +19,6 @@ public class GbsConfig {
 	private File srcDir = null;
 	private File destDir = null;
 	private File templateF = null;
-	private File skeletonF = null;
 
 	/**
 	 * Initializes the configuration. It uses the defaults defined in this class
@@ -37,7 +36,6 @@ public class GbsConfig {
 		srcDir = new File(safeReadStringProperty(_props, "srcDirName", ".")).getCanonicalFile();
 		destDir = new File(safeReadStringProperty(_props, "destDirName", ".")).getCanonicalFile();
 		templateF = new File(safeReadStringProperty(_props, "siteTemplateName", "./siteTemplate.xml")).getCanonicalFile();
-		skeletonF = new File(safeReadStringProperty(_props, "siteSkeletonName", "./siteSkeleton.html")).getCanonicalFile();
 	}
 			
 	/**
@@ -65,15 +63,7 @@ public class GbsConfig {
 	public File getSiteTemplateFile() {
 		return templateF;
 	}
-	
-	/** 
-	 * Returns the site skeleton file.
-	 * @return   the site skeleton file
-	 */
-	public File getSiteSkeletonFile() {
-		return skeletonF;
-	}
-		
+			
 	/** 
 	 * Dumps the config onto stdout.
 	 */
@@ -81,7 +71,6 @@ public class GbsConfig {
 		System.out.println("debugMode=" + debugMode);
 		System.out.println("sourceDir=" + getSourceDir().getAbsolutePath());
 		System.out.println("siteTemplateFile=" + getSiteTemplateFile().getAbsolutePath());
-		System.out.println("siteSkeletonName=" + getSiteSkeletonFile().getAbsolutePath());
 	}
 
 	/**
