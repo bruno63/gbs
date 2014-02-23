@@ -9,27 +9,47 @@ import org.jdom2.*;
  * 
  * @author Bruno Kaiser
  */
-public class GbsBootstrapJumbotron extends GbsBootstrapFactory {
-	private static final String CN = "GbsBootstrapJumbotron";
+public class GbsBootstrapJumboLogin extends GbsBootstrapFactory {
+	private static final String CN = "GbsBootstrapJumboLogin";
+	int fade = 0;
+	int duration = 0;
+	File[] bgImages = null;
 
 	/**
 	 * Constructor.
 	 * 
 	 */
-	public GbsBootstrapJumbotron(Element htmlEl, File sourceDir, File destinationDir)  {
+	public GbsBootstrapJumboLogin(Element htmlEl, File sourceDir, File destinationDir)  {
 		destHtmlEl = htmlEl;
 		srcDir = sourceDir;
 		destDir = destinationDir;
 	}
+	
+	public void setFadingEffect(int fadeTime)
+	{
+		fade = fadeTime;
+	}
+	
+	public void setDurationEffect(int durationTime)
+	{
+		duration = durationTime;
+	}
+	public void setBackgroundImage(File bgImg)
+	{
+		if (bgImages == null) {
+			bgImages = new File[1];
+			bgImages[0] = bgImg;
+		}
+	}
 
 	public void savePage(Element nodeEl) throws JDOMException, IOException 
 	{
-		// <node name="NAME" type="jumbotron" resDir="DIRNAME" url="FILENAME.html">
-		//      <heroUnit image="IMAGENAME.jpg" alt="DESCRIPTION">
-		//        		<h1>TITLE</h1>
-		//        		<p>TEXT</p>
-		//		</heroUnit>
-		// </node>
+        // <node name="Home" type="jumbotronLogin" resDir="dirName" url="pageName.html">
+        //     <heroUnit image="imageName" alt="topic">
+        //         <h1>title</h1>
+        //     </heroUnit>
+        // </node>
+
 
 		// move the resources into the destination directory
 		Element _heroDescEl = nodeEl.getChild("heroUnit");
@@ -56,48 +76,22 @@ public class GbsBootstrapJumbotron extends GbsBootstrapFactory {
 		Element _rowEl = getContentRowElement(_containerEl);
 
 		// add the jumbotron div
-		Element _divEl = getDivElement("jumbotron clearfix", null)
-				.addContent(getDivElement("pull-right", null)
-				.addContent(getImageElement(
-				nodeEl.getAttributeValue("resDir") + File.separator + _heroDescEl.getAttributeValue("image"),
-				_heroDescEl.getAttributeValue("alt"),
-				ImageShapes.CIRCLE, true)));
+		Element _divEl = getDivElement("row-fluid col-sm-6 col-sm-offset-3", "content");
 		
 		// add all other content within hero unit
 		List<Element> _heroContentElems = _heroDescEl.getChildren();
 		for (int i = 0; i < _heroContentElems.size(); i++) {
 			_divEl.addContent((Element) _heroContentElems.get(i).clone().setNamespace(ns)); 
 		}
+		_divEl.addContent(getLoginForm());
 		_rowEl.addContent(_divEl);
-
-		// add some image links below (abstractRow)
-		// 		<abstractRow buttonText="STRING">
-		//       	[<linkUnit title="TITLE"  link="URL" image="FILENAME.jpg" text="TEXT" />]
-		//      </abstractRow>		
-		Element _abstractRowDescEl = nodeEl.getChild("abstractRow");
-		if (_abstractRowDescEl != null) {
-			Element _abstractRowEl = getDivElement("row-fluid", null);
-			// add all linkUnits ...
-			List<Element> _linkUnitElems = _abstractRowDescEl.getChildren("linkUnit");
-			for (int i = 0; i < _linkUnitElems.size(); i++) {
-				copyFile(new File(srcDir, nodeEl.getAttributeValue("resDir")),
-						new File(destDir, nodeEl.getAttributeValue("resDir")), 
-						_linkUnitElems.get(i).getAttributeValue("image"));
-				_abstractRowEl.addContent(
-						getLinkUnit(
-								_linkUnitElems.get(i).getAttributeValue("link"),
-								_linkUnitElems.get(i).getAttributeValue("title"),
-								_linkUnitElems.get(i).getAttributeValue("image"),
-								_linkUnitElems.get(i).getAttributeValue("text"),
-								nodeEl.getAttributeValue("resDir"),
-								_abstractRowDescEl.getAttributeValue("buttonText")));
-			}
-			_rowEl.addContent(_abstractRowEl);
-		}
 		
 		_bodyEl.addContent(getScriptElement("js/jquery.min.js", null));
 		_bodyEl.addContent(getScriptElement("js/bootstrap.min.js", null));
-
+		_bodyEl.addContent(getScriptElement("js/jquery.backstretch.min.js", null));
+		_bodyEl.addContent(getScriptElement(null, "$.backstretch(\"" + 
+				nodeEl.getAttributeValue("resDir") + File.separator + _heroDescEl.getAttributeValue("image") +
+				"\");"));
 
 		// save the page
 		new GbsXmlExport().write(destHtmlEl, new File(destDir, nodeEl.getAttributeValue("url")));

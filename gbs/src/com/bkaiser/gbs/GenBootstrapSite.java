@@ -1,6 +1,7 @@
 package com.bkaiser.gbs;
 import java.io.*;
 import java.util.List;
+
 import org.jdom2.*;
 import org.jdom2.input.SAXBuilder;
 
@@ -32,7 +33,7 @@ public class GenBootstrapSite {
 			cfg.dumpConfig();
 		}
 		loadSiteDescription();		
-		destHtmlEl = GbsBootstrapFactory.generatePageSkeleton();
+		destHtmlEl = GbsBootstrapFactory.getPageSkeleton();
 	}
 
 	/**
@@ -74,14 +75,23 @@ public class GenBootstrapSite {
 	// TODO: support arbitrary content in footer
 	private void addFooter() {
 		Element _containerEl = destHtmlEl.getChild("body", ns).getChild("div", ns);
-		_containerEl.addContent(GbsBootstrapFactory.generateFooter(siteDescEl.getAttributeValue("footerText"), true));
+		// first, try to use the child element footer
+		Element _footerEl = siteDescEl.getChild("footer", ns);
+		// if there is no child element footer, use attribute footerText or default
+		if (_footerEl == null) {
+			_footerEl = GbsBootstrapFactory.getFooter(siteDescEl.getAttributeValue("footerText"), true);
+		}
+		else {
+			_footerEl.detach();
+		}
+		_containerEl.addContent(_footerEl);
 	}
 
 	private void addNavigation() throws JDOMException, IOException {
 		Element _navbar = new Element("nav", ns).setAttribute("class", "navbar navbar-default navbar-inverse").setAttribute("role", "navigation");
-		_navbar.addContent(GbsBootstrapFactory.generateNavbarHeader());
+		_navbar.addContent(GbsBootstrapFactory.getNavbarHeader());
 		
-		Element _menu = GbsBootstrapFactory.generateDivElement("collapse navbar-collapse navbar-ex1-collapse", null);
+		Element _menu = GbsBootstrapFactory.getDivElement("collapse navbar-collapse navbar-ex1-collapse", null);
 		_navbar.addContent(_menu);
 		Element _menuItems = new Element("ul", ns).setAttribute("class", "nav navbar-nav");
 		_menu.addContent(_menuItems);
@@ -90,7 +100,6 @@ public class GenBootstrapSite {
 		addMenuItems(_menuItems, siteDescEl.getChildren("node"));
 		
 		GbsBootstrapFactory.getHeaderRowElement(destHtmlEl.getChild("body", ns).getChild("div", ns)).addContent(_navbar);
-		//destHtmlEl.getChild("body", ns).getChild("div", ns).getChild("div", ns).addContent(_navbar);
 	}
 
 	private void addMenuItems(Element destEl, List<Element> nodeElementList) throws JDOMException, IOException
@@ -102,10 +111,7 @@ public class GenBootstrapSite {
 			_nodeEl = nodeElementList.get(i);
 			_nodeType = _nodeEl.getAttributeValue("type").toLowerCase();
 
-			if (_nodeType.equals("jumbotron")) {
-				destEl.addContent(GbsBootstrapFactory.generateLinkingListItem(_nodeEl.getAttributeValue("name"), _nodeEl.getAttributeValue("url")));
-			}
-			else if (_nodeType.equals("menu")) {
+			if (_nodeType.equals("menu")) {
 				int _level = new Integer(_nodeEl.getAttributeValue("level")).intValue();
 				switch (_level) {
 				case 1: 
@@ -118,14 +124,9 @@ public class GenBootstrapSite {
 				default: GbsLogUtil.throwFatal(CN, "addMenuItems", "invalid level: <" + _nodeEl.getAttributeValue("level") + ">");
 				}
 			}
-			else if (_nodeType.equals("gallery")) {
-				destEl.addContent(GbsBootstrapFactory.generateLinkingListItem(_nodeEl.getAttributeValue("name"), _nodeEl.getAttributeValue("url")));
-			}
-			else if (_nodeType.equals("link")) {
-				destEl.addContent(GbsBootstrapFactory.generateLinkingListItem(_nodeEl.getAttributeValue("name"), _nodeEl.getAttributeValue("url")));
-			}
-			else if (_nodeType.equals("carousel")) {
-				destEl.addContent(GbsBootstrapFactory.generateLinkingListItem(_nodeEl.getAttributeValue("name"), _nodeEl.getAttributeValue("url")));
+			else if (_nodeType.equals("gallery") || _nodeType.equals("jumbologin") || _nodeType.equals("doclist")
+					|| _nodeType.equals("link") || _nodeType.equals("carousel") || _nodeType.equals("jumbotron")) {
+				destEl.addContent(GbsBootstrapFactory.getLinkingListItem(_nodeEl.getAttributeValue("name"), _nodeEl.getAttributeValue("url")));
 			}
 			else {
 				GbsLogUtil.throwFatal(CN, "addMenuItems", "type " + _nodeType + " unknown");
@@ -138,20 +139,16 @@ public class GenBootstrapSite {
 		Element _nodeEl = null;
 
 		for (int i = 0; i < nodeElementList.size(); i++) {
-
-			/*
-			// add title -> TODO: needs to be done for each page
-			_gbs.setPageTitle();
-			Element _titleEl = new Element("title", ns).addContent(_srcSiteEl.getAttributeValue("title"));
-			_gbs.destHtmlEl.getChild("head").addContent(_titleEl);
-			//_destHtmlEl.getChild("head").getChild("title").addContent(_srcSiteEl.getAttributeValue("title"));
-			 */
 			_nodeEl = (Element) nodeElementList.get(i);
 			_nodeType = _nodeEl.getAttributeValue("type").toLowerCase();
 
 			if (_nodeType.equals("jumbotron")) {
 				GbsBootstrapJumbotron _jumbotronPage = new GbsBootstrapJumbotron(destHtmlEl.clone(), cfg.getSourceDir(), cfg.getDestDir());
-				_jumbotronPage.generateJumbotron(_nodeEl);
+				_jumbotronPage.savePage(_nodeEl);
+			}
+			else if (_nodeType.equals("jumbologin")) {
+				GbsBootstrapJumboLogin _jumboLoginPage = new GbsBootstrapJumboLogin(destHtmlEl.clone(), cfg.getSourceDir(), cfg.getDestDir());
+				_jumboLoginPage.savePage(_nodeEl);
 			}
 			else if (_nodeType.equals("menu")) {
 				// make sure the destination directory exists
@@ -163,14 +160,18 @@ public class GenBootstrapSite {
 			}
 			else if (_nodeType.equals("gallery")) {
 				GbsBootstrapGallery _galleryPage = new GbsBootstrapGallery(destHtmlEl.clone(), cfg.getSourceDir(), cfg.getDestDir());
-				_galleryPage.generateGallery(_nodeEl);
+				_galleryPage.savePage(_nodeEl);
+			}
+			else if (_nodeType.equals("doclist")) {
+				GbsBootstrapDocList _doclistPage = new  GbsBootstrapDocList(destHtmlEl.clone(), cfg.getSourceDir(), cfg.getDestDir());
+				_doclistPage.savePage(_nodeEl);
 			}
 			else if (_nodeType.equals("link")) {
 				// don't have to do anything as linked pages will exist already
 			}
 			else if (_nodeType.equals("carousel")) {
 				GbsBootstrapCarousel _carouselPage = new GbsBootstrapCarousel(destHtmlEl.clone(), cfg.getSourceDir(), cfg.getDestDir());
-				_carouselPage.generateCarousel(_nodeEl);
+				_carouselPage.savePage(_nodeEl);
 			}
 			else {
 				GbsLogUtil.throwFatal(CN, "generatePages", "type " + _nodeType + " unknown");
@@ -184,10 +185,10 @@ public class GenBootstrapSite {
 		
 		// TODO: add class="active"
 		if (level == 1) {		// dropdown menu
-			_listEl = GbsBootstrapFactory.generateDropDownMenu(nodeEl.getAttributeValue("name"));
+			_listEl = GbsBootstrapFactory.getDropDownMenu(nodeEl.getAttributeValue("name"));
 		}
 		else  {   // level = 2          dropdown submenu
-			_listEl = GbsBootstrapFactory.generateDropDownSubmenu(nodeEl.getAttributeValue("name"));
+			_listEl = GbsBootstrapFactory.getDropDownSubmenu(nodeEl.getAttributeValue("name"));
 		}
 		_listEl.addContent(_submenuEl);
 		// iterate over all node Elements
