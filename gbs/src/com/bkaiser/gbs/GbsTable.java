@@ -6,7 +6,7 @@ import org.jdom2.*;
  * 
  * @author Bruno Kaiser
  */
-public class GbsBootstrapTable extends GbsBootstrapFactory  {
+public class GbsTable extends GbsFactory  {
 //	private static final String CN = "GbsBootstrapTable";
 	Element tableEl = null;
 	Element rootEl = null;
@@ -21,7 +21,7 @@ public class GbsBootstrapTable extends GbsBootstrapFactory  {
 	 * Constructor.
 	 * 
 	 */
-	public GbsBootstrapTable(boolean responsive)  {
+	public GbsTable(boolean responsive)  {
 		tableEl = new Element("table", ns).setAttribute("class", getTableTypeAttr(TableType.DEFAULT));
 		
 		if (responsive == true) {
@@ -34,8 +34,7 @@ public class GbsBootstrapTable extends GbsBootstrapFactory  {
 	
 	public void addTableType(TableType type) 
 	{
-		String _classAttr = tableEl.getAttributeValue("class");
-		tableEl.setAttribute("class", _classAttr + " " + getTableTypeAttr(type));
+		addClassAttribute(tableEl, getTableTypeAttr(type));
 	}
 	
 	/* 
@@ -95,7 +94,7 @@ public class GbsBootstrapTable extends GbsBootstrapFactory  {
 			if (_fieldContent.startsWith("@DWN:")) {
 				_tdEl = new Element("td", ns).addContent(
 						getLinkElement(_fieldContent.substring(5), "", null).addContent(
-						getGlyph(Glyphicon.CLOUDDOWNLOAD)));
+						GbsGlyph.getGlyph(Glyphicon.CLOUDDOWNLOAD)));
 			}
 			else if (_fieldContent.startsWith("@SPAN:")) {
 				char _colspan = _fieldContent.charAt(6);
